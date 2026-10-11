@@ -1,0 +1,54 @@
+# TEMPLATE for a consuming app repository, not the library's own release workflow.
+# Set repository variables: MACOS_PROJECT, MACOS_SCHEME, MACOS_APP_NAME, MACOS_BUILD_NUMBER.
+# Store an app-specific Sparkle seed as SPARKLE_PRIVATE_KEY; never reuse another app's private key.
+# Project must embed Sparkle 2.10.0 and configure signed feed/pre-extraction verification.
+name: Draft personal Mac release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  draft:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
+      APP_PROJECT: ${{ vars.MACOS_PROJECT }}
+      APP_SCHEME: ${{ vars.MACOS_SCHEME }}
+      APP_NAME: ${{ vars.MACOS_APP_NAME }}
+      BUILD_NUMBER: ${{ vars.MACOS_BUILD_NUMBER }}
+      UPDATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+      MACOS_SIGNING_IDENTITY: '-'
+      MACOS_DERIVED_DATA: ${{ runner.temp }}/AppBuild
+    steps:
+      - name: Validate version before checkout
+        run: |
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          printf 'RELEASE_VERSION=%s\n' "$RELEASE_VERSION" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.ref }}
+      # Copy the library release scripts into this app's scripts/ directory first.
+      - name: Build archive using the app's signing configuration
+        run: |
+          scripts/build-macos.sh "$APP_PROJECT" "$APP_SCHEME" "$RELEASE_VERSION" "$BUILD_NUMBER" "$RUNNER_TEMP/App.xcarchive"
+      - name: Prepare update from the resolved Sparkle artifact
+        run: |
+          umask 077
+          test -n "$UPDATE_KEY"
+          printf '%s' "$UPDATE_KEY" > "$RUNNER_TEMP/sparkle.key"
+          export SPARKLE_BIN="$MACOS_DERIVED_DATA/SourcePackages/artifacts/sparkle/Sparkle/bin"
+          test -x "$SPARKLE_BIN/sign_update" || { echo 'The build did not resolve the expected Sparkle artifact.' >&2; exit 1; }
+          export SPARKLE_KEY_FILE="$RUNNER_TEMP/sparkle.key"
+          scripts/package-macos.sh "$RUNNER_TEMP/App.xcarchive/Products/Applications/$APP_NAME.app" "$GITHUB_REPOSITORY" "$RELEASE_VERSION" "$RUNNER_TEMP/dist" self-signed
+      - name: Create draft for update testing
+        run: |
+          printf '%s\n' 'Personal build, not notarized. First launch may require approval in Privacy & Security. Test updating from the previous install before publishing.' > "$RUNNER_TEMP/notes.md"
+          gh release create "v$RELEASE_VERSION" "$RUNNER_TEMP/dist/"* --verify-tag --draft --title "$APP_NAME $RELEASE_VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+      - name: Remove temporary secret
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sparkle.key"

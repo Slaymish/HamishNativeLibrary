@@ -1,0 +1,34 @@
+name: NativeDemo
+options:
+  deploymentTarget:
+    macOS: '13.0'
+    iOS: '16.0'
+packages:
+  HamishNativeLibrary:
+    path: ../..
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    CODE_SIGNING_ALLOWED: NO
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  NativeDemoMac:
+    type: application
+    platform: macOS
+    sources: [DemoApp.swift]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nz.hamish.native-demo.mac
+    dependencies:
+      - package: HamishNativeLibrary
+        products: [NativeCore, AgentInterchange, NativeUI, NativeSecurity]
+  NativeDemoPhone:
+    type: application
+    platform: iOS
+    sources: [DemoApp.swift]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nz.hamish.native-demo.phone
+    dependencies:
+      - package: HamishNativeLibrary
+        products: [NativeCore, AgentInterchange, NativeUI, NativeSecurity]
