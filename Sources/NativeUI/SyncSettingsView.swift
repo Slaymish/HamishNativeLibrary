@@ -59,6 +59,7 @@ import NativeSync
                 }
             }
         }.formStyle(.grouped).navigationTitle("Device sync")
+            .task { await service.refreshStoredState() }
     }
     private func perform(_ operation: @escaping @MainActor () async -> Void) {
         busy = true

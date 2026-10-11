@@ -22,6 +22,11 @@ public struct SyncJournal: Sendable {
         try state.reconcile(current)
     }
 
+    public func storedState(apply: ([String: Data]) throws -> Void) throws -> SyncReplica? {
+        try recover(apply: apply)
+        return try read(url)
+    }
+
     public func exchange(groupID: UUID, remote: SyncReplica? = nil,
                          readCurrent: () throws -> [String: Data],
                          validate: ([String: Data]) throws -> Void = { _ in },
@@ -52,11 +57,15 @@ public struct SyncJournal: Sendable {
                      validate: ([String: Data]) throws -> Void = { _ in },
                      apply: ([String: Data]) throws -> Void) throws -> SyncReplica {
         try recover(apply: apply)
-        if let state = try read(url), state.groupID == groupID {
+        let previous = try read(url)
+        if let state = previous, state.groupID == groupID {
             return try exchange(groupID: groupID, readCurrent: readCurrent, validate: validate, apply: apply)
         }
+        guard previous?.conflicts.isEmpty != false else { throw SyncFailure.unresolvedConflict }
+        let current = try readCurrent()
         var state = SyncReplica(namespace: namespace, groupID: groupID)
-        try state.reconcile(readCurrent())
+        if let previous { try state.preserveDeletions(from: previous, current: current) }
+        try state.reconcile(current)
         try commit(state, validate: validate, apply: apply)
         return state
     }

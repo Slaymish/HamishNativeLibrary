@@ -34,7 +34,7 @@ The [public GitHub repository](https://github.com/Slaymish/HamishNativeLibrary) 
 A consuming manifest can use:
 
 ```swift
-.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.3.0"))
+.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.3.1"))
 // target dependencies:
 .product(name: "AgentInterchange", package: "HamishNativeLibrary")
 .product(name: "NativeUI", package: "HamishNativeLibrary")
@@ -92,5 +92,5 @@ release. Consumer apps sign both the archive and feed with their own Sparkle key
 or ad-hoc Mac apps remain unnotarised, and iOS distribution needs its own Apple signing route.
 See [releasing](docs/RELEASING.md), [security](SECURITY.md), and [source investigation](docs/RESEARCH.md).
 
-Licensed under MIT. Source version: 0.3.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
+Licensed under MIT. Source version: 0.3.1. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
 for published versions.

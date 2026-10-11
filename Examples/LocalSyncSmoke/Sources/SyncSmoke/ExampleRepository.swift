@@ -43,6 +43,7 @@ struct ExampleRepository: LocalSyncRepository {
             try apply(next)
         }
     }
+    func storedSync() throws -> SyncReplica? { try locked { try journal.storedState(apply: apply) } }
     func joinSync(groupID: UUID) throws -> SyncReplica {
         try locked { try journal.join(groupID: groupID, readCurrent: read, validate: validate, apply: apply) }
     }

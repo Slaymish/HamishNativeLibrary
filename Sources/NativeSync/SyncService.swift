@@ -9,7 +9,9 @@ public protocol LocalSyncRepository: Sendable {
     func joinSync(groupID: UUID) throws -> SyncReplica
     func exchangeSync(groupID: UUID, remote: SyncReplica?) throws -> SyncReplica
     func resolveSync(record: String, versionID: UUID) throws -> SyncReplica
+    func storedSync() throws -> SyncReplica?
 }
+public extension LocalSyncRepository { func storedSync() throws -> SyncReplica? { nil } }
 
 public struct SyncInvitation: Codable, Equatable, Sendable {
     public var version = 1
@@ -68,6 +70,8 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
     private var settings: Settings?
     private var generation = UUID()
     private var configuring = false
+    private var shownGroup: UUID?
+    private var shownClock = SyncClock()
     private struct Settings: Codable { var host: Bool; var invitation: SyncInvitation }
 
     public init(namespace: String, serviceType: String, repository: any LocalSyncRepository,
@@ -84,6 +88,7 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
         listener.onConnection = { [weak self] link in self?.adopt(link) }
         listener.onStatus = { [weak self] message in if self?.links.isEmpty == true { self?.status = message } }
         browser.onStatus = { [weak self] message in if self?.links.isEmpty == true { self?.status = message } }
+        Task { [weak self] in await self?.refreshStoredState() }
     }
 
     /// Called only after an explicit user request to enable sharing on this Mac.
@@ -101,6 +106,7 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
         configuring = true
         defer { configuring = false }
         stop()
+        let configurationGeneration = generation
         do {
             let previousCredential = try credentials.read()
             try credentials.save(NativeJSON.encode(next))
@@ -108,12 +114,19 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
             let state: SyncReplica
             do { state = try await Task.detached { try repository.joinSync(groupID: next.invitation.groupID) }.value }
             catch {
-                if let previousCredential { try credentials.save(previousCredential) } else { try credentials.remove() }
+                if generation == configurationGeneration {
+                    if let previousCredential { try credentials.save(previousCredential) } else { try credentials.remove() }
+                }
                 throw error
             }
-            settings = next; isEnabled = true; conflicts = state.conflicts; failure = nil
+            guard generation == configurationGeneration else { return }
+            settings = next; isEnabled = true; show(state); failure = nil
             start()
-        } catch { failure = error.localizedDescription }
+        } catch {
+            guard generation == configurationGeneration else { return }
+            failure = error.localizedDescription
+            await refreshStoredState()
+        }
     }
     public func disconnect() {
         stop()
@@ -123,7 +136,11 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
 
     /// Host apps call start on foreground and stop on iOS background. No permanent background service is installed.
     public func start() {
-        guard !active, let settings else { return }
+        guard !active else { return }
+        guard let settings else {
+            Task { [weak self] in await self?.refreshStoredState() }
+            return
+        }
         active = true; generation = UUID(); failure = nil
         let invitation = settings.invitation
         let parameters = parameters(invitation)
@@ -158,10 +175,20 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
     }
     public func resolve(record: String, versionID: UUID) async {
         let repository = repository
+        let currentGeneration = generation
         do {
             let state = try await Task.detached { try repository.resolveSync(record: record, versionID: versionID) }.value
-            conflicts = state.conflicts; failure = nil; broadcast(state)
-        } catch { failure = error.localizedDescription }
+            guard generation == currentGeneration else { return }
+            show(state); failure = nil; broadcast(state)
+        } catch { if generation == currentGeneration { failure = error.localizedDescription } }
+    }
+    public func refreshStoredState() async {
+        let repository = repository, currentGeneration = generation
+        do {
+            let state = try await Task.detached { try repository.storedSync() }.value
+            guard generation == currentGeneration else { return }
+            if let state { show(state) }
+        } catch { if generation == currentGeneration { failure = error.localizedDescription } }
     }
     private func parameters(_ invitation: SyncInvitation) -> NWParameters {
         LocalTLS.parameters(key: invitation.key, domain: "native-sync:" + namespace, identity: namespace)
@@ -193,16 +220,22 @@ public enum SyncMessage: Codable, Sendable { case replica(SyncReplica) }
         do {
             let state = try await Task.detached { try repository.exchangeSync(groupID: groupID, remote: remote) }.value
             guard active, generation == currentGeneration else { return }
-            conflicts = state.conflicts; failure = nil
+            show(state); failure = nil
             if remote != nil { lastSynced = Date(); status = conflicts.isEmpty ? "Up to date on this network" : "Changes synced — review conflicting edits" }
             broadcast(state)
         } catch { if active && generation == currentGeneration { failure = error.localizedDescription } }
     }
     private func broadcast(_ state: SyncReplica) {
+        guard active, state.namespace == namespace, state.groupID == settings?.invitation.groupID else { return }
         guard let bytes = try? NativeJSON.encode(state) else { return }
         let digest = Data(SHA256.hash(data: bytes))
         for (id, link) in links where lastSent[id] != digest {
             lastSent[id] = digest; link.sendLatest(.replica(state))
         }
+    }
+    private func show(_ state: SyncReplica) {
+        if let expected = settings?.invitation.groupID, state.groupID != expected { return }
+        if shownGroup == state.groupID && !state.clock.dominates(shownClock) { return }
+        shownGroup = state.groupID; shownClock = state.clock; conflicts = state.conflicts
     }
 }

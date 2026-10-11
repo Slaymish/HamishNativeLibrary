@@ -137,6 +137,17 @@ public struct SyncReplica: Codable, Equatable, Sendable {
             ancestors: Array(ancestors.prefix(16)), editedAt: Date(timeIntervalSince1970: floor(Date().timeIntervalSince1970)))]
     }
 
+    /// Seed deletion markers when explicitly moving to a new pairing group, without carrying another group's device clocks.
+    public mutating func preserveDeletions(from previous: Self, current: [String: Data]) throws {
+        try previous.validate()
+        guard namespace == previous.namespace else { throw SyncFailure.wrongGroup }
+        var next = self
+        for (key, versions) in previous.records where current[key] == nil && versions.allSatisfy({ $0.payload == nil }) {
+            try next.change(key, payload: nil)
+        }
+        try next.validate(); self = next
+    }
+
     public mutating func merge(_ remote: Self) throws {
         try remote.validate()
         guard namespace == remote.namespace, groupID == remote.groupID else { throw SyncFailure.wrongGroup }

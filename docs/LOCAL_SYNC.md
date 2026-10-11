@@ -50,7 +50,7 @@ uncoordinated database or a shared cloud folder. A minimal implementation is sho
 - Before a normal app/CLI write call `validateEdit(proposedProjection)` under the lock. It blocks changes
   to unresolved records, retaining alternatives until explicit review. Preflight multi-record changes
   before writing any constituent file.
-- Expose `join`, `exchange` and `resolve` through the repository protocol. Initialise `SyncService` with
+- Expose `storedState`, `join`, `exchange` and `resolve` through the repository protocol. Initialise `SyncService` with
   a versioned app namespace, app-specific Bonjour type and that repository. Set NSBonjourServices to
   that type and NSLocalNetworkUsageDescription to the actual purpose. Start in the foreground; stop on
   iOS background. No multicast entitlement or CloudKit container is required for this ordinary Bonjour/TCP path.
@@ -67,7 +67,8 @@ merge automatically. Array order follows the shared order, then new IDs in stabl
 competing scalar edits and missing/expired common ancestors require review. Records created independently
 with different IDs are separate; the app owns human identity matching and explicit deduplication.
 
-All concurrent whole-record versions remain in the journal. The app shows a deterministic provisional
+All concurrent whole-record versions remain in the journal, including after disconnect/relaunch.
+Pairing a new group requires resolving old conflicts first and preserves deletion markers without importing old device clocks. The app shows a deterministic provisional
 projection while conflicts are pending. Concurrent delete/edit displays the deletion and retains the edit
 for review. Choosing a version explicitly replaces the **whole record**, including fields that had merged;
 it creates a new causal revision that dominates the alternatives. Local edits cannot silently absorb an

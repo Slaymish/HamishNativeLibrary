@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-11
+
+- Load stored conflicts even while disconnected so they remain reviewable after relaunch.
+- Require explicit resolution before joining a new pairing group, retaining unreviewed alternatives.
+- Carry deletion markers into a new group without carrying old device clocks, preventing silent resurrection during re-pairing.
+
 ## [0.3.0] - 2026-10-11
 
 - Add NativeSync for opt-in encrypted Mac/iPhone sync over Bonjour/TCP, with per-device pairing credentials and automatic reconnect.
