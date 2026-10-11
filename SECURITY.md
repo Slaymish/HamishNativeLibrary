@@ -32,3 +32,8 @@ testing an actual prior installation, not just this package's test results. See 
 This repository has no security-report inbox configured. Before public hosting, configure a private
 reporting channel or enable GitHub private vulnerability reporting. Do not put a private-data sample
 into a public issue.
+
+Device sync is a separate explicit grant for complete portable app data. Pairing codes are secrets.
+Encrypted transport does not encrypt local stores/backups, retract copies or make cached approvals current.
+Fresh key proof, bounded messages and generation checks protect reconnection and re-pairing. See
+[local sync security, recovery and device checks](docs/LOCAL_SYNC.md).

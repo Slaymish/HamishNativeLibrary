@@ -7,7 +7,8 @@ The root package has no third-party dependencies. Choose only the products your 
 | --- | --- |
 | `NativeCore` | App support paths, configurable JSON encoding, atomic storage/recovery, snapshot comparison and cooperating app/CLI locks |
 | `AgentInterchange` | Configurable typed schema, prompts, selective export, validated import, preview/selection, conflicts, provenance, tombstones and checkpoints |
-| `NativeUI` | Native sharing consent and prompt/file/paste import review screens |
+| `NativeUI` | Native sharing, import review and device-sync pairing/conflict screens |
+| `NativeSync` | Encrypted same-network device sync, offline merging, tombstones, explicit conflict review and crash recovery |
 | `NativeSecurity` | Per-device Keychain storage with configurable accessibility and a replay-safe UI authentication gate |
 | `NativeUpdates` | Separate macOS-only Sparkle adapter in `Examples/MacUpdater`; no Sparkle dependency in the cross-platform package |
 
@@ -33,7 +34,7 @@ The [public GitHub repository](https://github.com/Slaymish/HamishNativeLibrary) 
 A consuming manifest can use:
 
 ```swift
-.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.2.0"))
+.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.3.0"))
 // target dependencies:
 .product(name: "AgentInterchange", package: "HamishNativeLibrary")
 .product(name: "NativeUI", package: "HamishNativeLibrary")
@@ -67,6 +68,17 @@ This package implements a manual exchange. It has no provider login, chat scrapi
 sync, inference billing or personal-memory API. Real OAuth is a future provider adapter; the native
 consent screen describes the capabilities implemented here. See [provider access](docs/PROVIDERS.md).
 
+## Sync a Mac and iPhone
+
+Add `NativeSync`, implement `LocalSyncRepository` under your app's existing file lock and show
+`SyncSettingsView`. Pair explicitly once; updates reconnect over the same network while the Mac is
+awake and both apps are open. Offline edits and deletions persist; conflicting edits require review.
+No iCloud or hosted service is required. See [setup, guarantees and limits](docs/LOCAL_SYNC.md).
+
+`Examples/LocalSyncSmoke` is a compiled repository example and encrypted loopback check using only
+fictional data and disposable keys. Keep Close adopts two-way records; City shares the same transport
+for its durable Mac-authoritative companion mirror. Neither feature provides provider-memory sync.
+
 ## Keep improving it
 
 Use the project [release skill](.agents/skills/release/SKILL.md) for library releases.
@@ -80,5 +92,5 @@ release. Consumer apps sign both the archive and feed with their own Sparkle key
 or ad-hoc Mac apps remain unnotarised, and iOS distribution needs its own Apple signing route.
 See [releasing](docs/RELEASING.md), [security](SECURITY.md), and [source investigation](docs/RESEARCH.md).
 
-Licensed under MIT. Source version: 0.2.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
+Licensed under MIT. Source version: 0.3.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
 for published versions.

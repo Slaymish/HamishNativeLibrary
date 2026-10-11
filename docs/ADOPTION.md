@@ -40,3 +40,8 @@ Release script entrypoints can delegate to scripts in the resolved library check
 version. Keep Close's archive/appcast wrappers do this. Its self-signed path signs both archive and feed
 using the existing app-specific Sparkle key. App updater objects remain macOS app adapters: the root package
 does not import Sparkle, and the optional NativeUpdates subpackage is not remotely addressable by Xcode.
+
+Version 0.3 adds NativeSync for Keep Close's two-way portable records and City's durable Mac mirror.
+Consumers add the NativeSync product, Bonjour usage declarations and repository/lifecycle adapters.
+Read [local sync](LOCAL_SYNC.md) before adapting another store; per-device security and runtime authority
+are excluded deliberately. Pairing and phone validation are app setup, not automatic library installation.
