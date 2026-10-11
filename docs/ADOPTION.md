@@ -4,8 +4,9 @@ The root package is the shared code source. Consumer applications choose product
 not a runtime plug-in that can replace code inside already installed applications.
 
 During development, a local path dependency makes library source edits available at the app's next build.
-Use that in a temporary branch when checking a fix against City or Keep Close. Neither repository was
-migrated in this setup; their existing working state and behavior remain under their own guidance.
+Use that temporarily when checking a fix against City or Keep Close, then pin a released version before
+finishing integration. Both repositories now use the library's shared primitives; their domain rules,
+saved formats, existing working state and behavior remain under their own guidance.
 
 Once hosted on GitHub, version tags become Swift Package Manager versions. Before 1.0 use an
 up-to-next-minor range for compatible patch fixes, or an exact pin when an app needs a frozen release.
@@ -28,7 +29,14 @@ Xcode remote package URLs resolve the repository root, not arbitrary subfolders.
 macOS app, add Sparkle 2.10.0 directly and copy the small adapter into the app, or later promote NativeUpdates
 to its own repository. This deliberately avoids pulling a macOS binary artifact into every iOS dependency.
 
-Practical first adoption: use the new exchange layer in a small fictional-context app. Keep Close's additive
-domain merges and City's agent runtime/RealityKit code should stay in their repositories until separately
-integrated and tested. NativeCore is suitable for simple local JSON state, not a replacement for a ledger,
+Keep Close uses strict schema decoding for its existing version-1/2 envelope, shared file/JSON/lock helpers,
+snapshot comparison, native transfer helpers and authentication gate. City uses shared file/JSON/clipboard
+helpers and per-device Keychain storage, retaining its original pairing accessibility and key identifiers.
+Keep Close's additive domain merges and City's agent runtime/RealityKit code stay in their repositories.
+NativeCore is suitable for simple local JSON state, not a replacement for a ledger,
 distributed database or filesystem coordination over cloud storage.
+
+Release script entrypoints can delegate to scripts in the resolved library checkout, so they share its
+version. Keep Close's archive/appcast wrappers do this. Its self-signed path signs both archive and feed
+using the existing app-specific Sparkle key. App updater objects remain macOS app adapters: the root package
+does not import Sparkle, and the optional NativeUpdates subpackage is not remotely addressable by Xcode.

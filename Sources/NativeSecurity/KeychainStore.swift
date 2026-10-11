@@ -7,8 +7,12 @@ public struct KeychainFailure: Error, Sendable {
 
 /// Per-device generic passwords. Does not enable iCloud or change Keychain permissions.
 public struct KeychainStore: Sendable {
+    public enum Accessibility: Sendable { case whenUnlockedThisDeviceOnly, afterFirstUnlockThisDeviceOnly }
     public let service: String
-    public init(service: String) { self.service = service }
+    public let accessibility: Accessibility
+    public init(service: String, accessibility: Accessibility = .whenUnlockedThisDeviceOnly) {
+        self.service = service; self.accessibility = accessibility
+    }
 
     public func read(account: String) throws -> Data? {
         var query = base(account)
@@ -27,7 +31,8 @@ public struct KeychainStore: Sendable {
         if status == errSecItemNotFound {
             var item = query
             item[kSecValueData as String] = data
-            item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            item[kSecAttrAccessible as String] = accessibility == .whenUnlockedThisDeviceOnly
+                ? kSecAttrAccessibleWhenUnlockedThisDeviceOnly : kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             let added = SecItemAdd(item as CFDictionary, nil)
             guard added == errSecSuccess else { throw KeychainFailure(status: added) }
         } else if status != errSecSuccess { throw KeychainFailure(status: status) }

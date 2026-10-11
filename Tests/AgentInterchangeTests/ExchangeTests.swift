@@ -6,6 +6,20 @@ import NativeCore
 struct Preference: Codable, Equatable, Sendable { var name: String; var enabled: Bool }
 
 struct ExchangeTests {
+    @Test func existingEnvelopesUseStrictSharedDecoder() throws {
+        struct Legacy: Decodable { var version: Int; var people: [Person] }
+        struct Person: Decodable { var name: String; var notes: String? }
+        let schema = PayloadSchema.object(properties: ["version": .integer(minimum: 1, maximum: 2),
+            "people": .array(items: .object(properties: ["name": .string(maximum: 20),
+                "notes": .nullable(.string(maximum: 40))], required: ["name"]), maximum: 10)], required: ["version", "people"])
+        let text = #"{"version":2,"people":[{"name":"Fictional","notes":null}]}"#
+        let good = try StrictJSONDocument.decode(Legacy.self, from: Data(("```\n" + text + "\n```").utf8),
+            schema: schema, fences: .jsonOrUnlabelled)
+        #expect(good.people.first?.name == "Fictional")
+        #expect(throws: (any Error).self) {
+            try StrictJSONDocument.decode(Legacy.self, from: Data(text.replacingOccurrences(of: "\"notes\":null", with: "\"history\":[]").utf8), schema: schema)
+        }
+    }
     @Test func permissionScopesAndRevocation() async throws {
         let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
         let session = ExchangeSession(configuration: try config(), stateURL: folder.appendingPathComponent("state.json"))

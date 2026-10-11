@@ -6,6 +6,11 @@ bounded integers, booleans and nullable values. It exports JSON Schema-shaped gu
 it does not load arbitrary JSON Schema, resolve remote refs or run arbitrary validation code from a file.
 Schema versions must match exactly. Add explicit migration in the app before changing them.
 
+For an established app whose envelope and merge rules already work, `StrictJSONDocument.decode` reuses
+the same bounded, recursive schema checks without introducing an ExchangeSession database or wire migration.
+The app retains domain validation and its own transaction; `SnapshotChanges` can supply stable-ID comparisons
+for the existing checkpoint/prompt contract. Keep Close adopts this route.
+
 The envelope has `formatVersion`, `appID`, `schemaID`, `schemaVersion`, `exchangeID`, `source` and
 `records`. Each proposed record has an `id`, `payload`, optional `baseRevision`, and optional
 `confidence` (`suggested` or `uncertain`). Unknown fields anywhere are rejected. Default limits are

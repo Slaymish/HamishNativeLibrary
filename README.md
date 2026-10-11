@@ -5,10 +5,10 @@ The root package has no third-party dependencies. Choose only the products your 
 
 | Product | Provides |
 | --- | --- |
-| `NativeCore` | App support paths, consistent JSON encoding, private atomic storage, backups and cooperating app/CLI locks |
+| `NativeCore` | App support paths, configurable JSON encoding, atomic storage/recovery, snapshot comparison and cooperating app/CLI locks |
 | `AgentInterchange` | Configurable typed schema, prompts, selective export, validated import, preview/selection, conflicts, provenance, tombstones and checkpoints |
 | `NativeUI` | Native sharing consent and prompt/file/paste import review screens |
-| `NativeSecurity` | Per-device Keychain storage with explicit failures |
+| `NativeSecurity` | Per-device Keychain storage with configurable accessibility and a replay-safe UI authentication gate |
 | `NativeUpdates` | Separate macOS-only Sparkle adapter in `Examples/MacUpdater`; no Sparkle dependency in the cross-platform package |
 
 ## Start locally
@@ -29,11 +29,11 @@ your own team/signing settings for a device run. The sample permission lasts for
 ## Use in a new app
 
 Add this folder as a local Swift package in Xcode, then add the products above to your app target.
-The [private GitHub repository](https://github.com/Slaymish/HamishNativeLibrary) can be added by its URL
-once a version is tagged. Authenticate Xcode/Git with an account that has repository access. A consuming manifest can use:
+The [public GitHub repository](https://github.com/Slaymish/HamishNativeLibrary) can be added by its URL.
+A consuming manifest can use:
 
 ```swift
-.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.1.0"))
+.package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.2.0"))
 // target dependencies:
 .product(name: "AgentInterchange", package: "HamishNativeLibrary")
 .product(name: "NativeUI", package: "HamishNativeLibrary")
@@ -80,5 +80,5 @@ release. Consumer apps sign both the archive and feed with their own Sparkle key
 or ad-hoc Mac apps remain unnotarised, and iOS distribution needs its own Apple signing route.
 See [releasing](docs/RELEASING.md), [security](SECURITY.md), and [source investigation](docs/RESEARCH.md).
 
-Licensed under MIT. Source version: 0.1.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
+Licensed under MIT. Source version: 0.2.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
 for published versions.

@@ -78,11 +78,7 @@ public struct AgentExchangeView<Payload: Codable & Equatable & Sendable>: View {
         .fileImporter(isPresented: $choosingFile, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
             do {
                 guard let url = try result.get().first else { return }
-                let scoped = url.startAccessingSecurityScopedResource()
-                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                let handle = try FileHandle(forReadingFrom: url)
-                defer { try? handle.close() }
-                preview(try handle.read(upToCount: session.configuration.maximumBytes + 1) ?? Data())
+                preview(try ImportFile.read(url, maximumBytes: session.configuration.maximumBytes))
             } catch { plan = nil; selection = []; message = "Could not read the selected file." }
         }
     }
@@ -98,12 +94,7 @@ public struct AgentExchangeView<Payload: Codable & Equatable & Sendable>: View {
         catch { prompt = ""; message = error.localizedDescription }
     }
     private func copy() {
-        #if os(macOS)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(prompt, forType: .string)
-        #else
-        UIPasteboard.general.string = prompt
-        #endif
+        NativeClipboard.copy(prompt)
         message = "Prompt copied. Paste it into a chat you want to share this context with."
     }
     private func preview(_ data: Data) {

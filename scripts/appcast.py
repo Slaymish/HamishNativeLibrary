@@ -39,9 +39,20 @@ def generate(app, repo, version, archive, signature, output):
     if len(base64.b64decode(signature, validate=True)) != 64:
         raise ValueError('Invalid Ed25519 signature')
     archive = pathlib.Path(archive)
+    generate_release(info.get('CFBundleName', pathlib.Path(app).stem), repo, version, build,
+                     minimum, archive, signature, output)
+
+def generate_release(title, repo, version, build, minimum, archive, signature, output):
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo) or not re.fullmatch(r'\d+\.\d+\.\d+', version):
+        raise ValueError('Invalid repository or semantic version')
+    if not re.fullmatch(r'[1-9][0-9]*', str(build)) or not re.fullmatch(r'\d+\.\d+(\.\d+)?', minimum):
+        raise ValueError('Invalid build number or minimum OS')
+    if len(base64.b64decode(signature, validate=True)) != 64:
+        raise ValueError('Invalid Ed25519 signature')
+    archive = pathlib.Path(archive)
     rss = ET.Element('rss', version='2.0')
     channel = ET.SubElement(rss, 'channel')
-    ET.SubElement(channel, 'title').text = info.get('CFBundleName', pathlib.Path(app).stem)
+    ET.SubElement(channel, 'title').text = title
     ET.SubElement(channel, 'link').text = f'https://github.com/{repo}'
     item = ET.SubElement(channel, 'item')
     ET.SubElement(item, 'title').text = f'Version {version}'
@@ -57,14 +68,21 @@ def generate(app, repo, version, archive, signature, output):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--app', required=True)
+    parser.add_argument('--app')
     parser.add_argument('--repo', required=True)
     parser.add_argument('--version', required=True)
     parser.add_argument('--archive')
     parser.add_argument('--signature')
     parser.add_argument('--output')
+    parser.add_argument('--title')
+    parser.add_argument('--build')
+    parser.add_argument('--minimum-system-version')
     args = parser.parse_args()
-    if args.output:
+    if args.app is None:
+        if not all([args.title, args.build, args.minimum_system_version, args.archive, args.signature, args.output]):
+            parser.error('Provide an app or complete explicit release metadata')
+        generate_release(args.title, args.repo, args.version, args.build, args.minimum_system_version, args.archive, args.signature, args.output)
+    elif args.output:
         generate(args.app, args.repo, args.version, args.archive, args.signature, args.output)
     else:
         _, build, public, _ = metadata(args.app, args.repo, args.version)

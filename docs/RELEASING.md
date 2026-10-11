@@ -17,7 +17,7 @@ Apple code signing or notarisation. Version tags select source; consumer apps co
 5. Review/publish the draft, then update consumer apps' dependencies, tests and app releases.
 
 The source repository is [Slaymish/HamishNativeLibrary](https://github.com/Slaymish/HamishNativeLibrary),
-created private at Hamish's request. Consumers need repository access. Push main, verify CI, then tag
+made public at Hamish's request so consumer CI can resolve it without private credentials. Push main, verify CI, then tag
 the checked commit. Authenticate gh commands as Slaymish per command, without switching
 the machine's default work account. Use the [release skill](../.agents/skills/release/SKILL.md).
 

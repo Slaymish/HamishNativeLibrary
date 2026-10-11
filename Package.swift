@@ -18,6 +18,8 @@ let package = Package(
         .target(name: "NativeUI", dependencies: ["AgentInterchange", "NativeCore"]),
         .executableTarget(name: "ExchangeExample", dependencies: ["AgentInterchange"]),
         .testTarget(name: "NativeCoreTests", dependencies: ["NativeCore"]),
-        .testTarget(name: "AgentInterchangeTests", dependencies: ["AgentInterchange"])
+        .testTarget(name: "AgentInterchangeTests", dependencies: ["AgentInterchange"]),
+        .testTarget(name: "NativeSecurityTests", dependencies: ["NativeSecurity"]),
+        .testTarget(name: "NativeUITests", dependencies: ["NativeUI"])
     ]
 )

@@ -49,15 +49,8 @@ public struct ExchangeConfiguration<Payload: Codable & Equatable & Sendable>: Se
 
     public func decode(_ data: Data) throws -> ExchangeBatch<Payload> {
         guard data.count <= maximumBytes else { throw InterchangeError.invalid("Import exceeds the size limit.") }
-        var normalized = data
-        // Accept one whole fenced JSON block, never JSON extracted from surrounding prose.
-        if let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-           text.hasPrefix("```json\n"), text.hasSuffix("\n```") {
-            normalized = Data(text.dropFirst(8).dropLast(4).utf8)
-        }
-        let value = try NativeJSON.decode(JSONValue.self, from: normalized)
-        try batchSchema.validate(value)
-        let batch = try NativeJSON.decode(ExchangeBatch<Payload>.self, from: normalized)
+        let batch = try StrictJSONDocument.decode(ExchangeBatch<Payload>.self, from: data,
+            schema: batchSchema, maximumBytes: maximumBytes)
         guard !batch.exchangeID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw InterchangeError.invalid("Exchange ID must not be empty.")
         }

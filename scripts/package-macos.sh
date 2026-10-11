@@ -24,7 +24,7 @@ trap 'rm -rf "$staging"' EXIT
 name=$(basename "$app" .app)
 [[ "$name" =~ ^[A-Za-z0-9_-]+$ ]] || { echo 'Use an app bundle filename without spaces for release archives.' >&2; exit 1; }
 archive="$staging/$name-v$version.zip"
-ditto -c -k --sequesterRsrc --keepParent "$app" "$archive"
+python3 "$root/scripts/make-archive.py" "$app" "$archive" --expect "Contents/MacOS/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
 unzip -t "$archive" >/dev/null
 signature=$("$SPARKLE_BIN/sign_update" --ed-key-file "$SPARKLE_KEY_FILE" -p "$archive")
 swift "$root/scripts/verify-update.swift" "$archive" "$public" "$signature"
