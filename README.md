@@ -29,7 +29,8 @@ your own team/signing settings for a device run. The sample permission lasts for
 ## Use in a new app
 
 Add this folder as a local Swift package in Xcode, then add the products above to your app target.
-Once the repository is on GitHub and tagged, add its repository URL instead. A consuming manifest can use:
+The [private GitHub repository](https://github.com/Slaymish/HamishNativeLibrary) can be added by its URL
+once a version is tagged. Authenticate Xcode/Git with an account that has repository access. A consuming manifest can use:
 
 ```swift
 .package(url: "https://github.com/Slaymish/HamishNativeLibrary.git", .upToNextMinor(from: "0.1.0"))
@@ -38,7 +39,6 @@ Once the repository is on GitHub and tagged, add its repository URL instead. A c
 .product(name: "NativeUI", package: "HamishNativeLibrary")
 ```
 
-That URL is the proposed repository location, not evidence that it has been created.
 Use a payload containing ONLY the fields you want exchanged:
 
 ```swift
@@ -80,4 +80,5 @@ release. Consumer apps sign both the archive and feed with their own Sparkle key
 or ad-hoc Mac apps remain unnotarised, and iOS distribution needs its own Apple signing route.
 See [releasing](docs/RELEASING.md), [security](SECURITY.md), and [source investigation](docs/RESEARCH.md).
 
-Licensed under MIT. Initial prepared library version: 0.1.0; this is not a published release.
+Licensed under MIT. Source version: 0.1.0. Check [GitHub releases](https://github.com/Slaymish/HamishNativeLibrary/releases)
+for published versions.

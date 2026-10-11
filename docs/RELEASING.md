@@ -16,9 +16,9 @@ Apple code signing or notarisation. Version tags select source; consumer apps co
 4. The `Library release` workflow reruns CI, validates tag/version/notes and creates a GitHub draft.
 5. Review/publish the draft, then update consumer apps' dependencies, tests and app releases.
 
-No GitHub repository, push, remote tag or release is created by local setup. Suggested repo name:
-`Slaymish/HamishNativeLibrary`. When authorised, create it with the chosen visibility, set `origin`, push
-main, verify CI, and release 0.1.0. Authenticate gh commands as Slaymish per command, without switching
+The source repository is [Slaymish/HamishNativeLibrary](https://github.com/Slaymish/HamishNativeLibrary),
+created private at Hamish's request. Consumers need repository access. Push main, verify CI, then tag
+the checked commit. Authenticate gh commands as Slaymish per command, without switching
 the machine's default work account. Use the [release skill](../.agents/skills/release/SKILL.md).
 
 ## Consumer macOS apps

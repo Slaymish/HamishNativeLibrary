@@ -14,9 +14,11 @@ compilation against those deployment targets does not prove runtime behavior on 
   required when adopting this in an app.
 - Project release skill: bundled skill validator passed with a temporary PyYAML runtime via uv.
 
-CI files were prepared and inspected locally; no GitHub CI run or remote release occurred. Local gh account
-verification timed out, so GitHub authentication was not confirmed. No repository visibility was chosen and
-no remote was created. VERSION/changelog prepare 0.1.0 without tagging or publishing it.
+During the initial local setup, no GitHub CI run or remote release occurred. Account verification timed out,
+so authentication was not confirmed. VERSION/changelog prepared 0.1.0 without tagging or publishing it.
+On the retry, authentication succeeded and Hamish chose a private repository. The repository was created at
+https://github.com/Slaymish/HamishNativeLibrary. Local checks were rerun successfully; GitHub's Actions and
+Releases pages record the subsequent remote CI/release outcome.
 
 City remained clean at `df88e87b0f8640607eb55703a283c69da9d904fb`. Keep Close remained at
 `5ccd0e97687dd6907a925d7f998c0844c1557a19` with its existing project-file modification. Alphero writing files
